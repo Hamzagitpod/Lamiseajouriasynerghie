@@ -77,14 +77,14 @@ app.post('/api/ask', async (req, res) => {
       return res.status(500).json({ error: "API_KEY manquante (config Cloud Run/Secret Manager)" });
     }
 
-    const raw = await askGemini({
-      apiKey,
-      modelName: process.env.MODEL_NAME || 'gemini-1.5-pro',
-      systemPrompt: buildSystemPrompt(),
-      context,
-      query,
-      profile
-    });
+const raw = await askGemini({
+  apiKey,
+  systemPrompt: buildSystemPrompt(),
+  query: `${context}\n\n${query}`,
+  profile,
+});
+
+
 
     const answer = toPlainText(raw);
     if (sessionId) addTurn(sessionId, 'assistant', answer);
@@ -98,6 +98,6 @@ app.post('/api/ask', async (req, res) => {
 });
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   logger.info(`Server listening on ${PORT}`);
 });

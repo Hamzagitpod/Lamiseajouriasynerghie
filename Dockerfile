@@ -1,27 +1,25 @@
-
-# Use Node.js 20 LTS (Cloud Run supported)
 FROM node:20-alpine
 
-# Create app directory
 WORKDIR /app
 
-# Install dependencies separately for better caching
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev || npm install --omit=dev
-
-# Copy compiled files (build expected before image build in Cloud Build) if present
-# But also allow building inside container
+# Copie les manifestes et tsconfig (meilleur cache Docker)
+COPY package*.json ./
 COPY tsconfig.json ./
-COPY src ./src
 
-# Build (if dist not present)
+# Installe toutes les dépendances (y compris dev pour compiler TypeScript)
+RUN npm install
+
+# Copie le code source complet
+COPY . .
+
+# Compile TypeScript -> dist/
 RUN npm run build
 
-# Runtime env
+# Supprime les dépendances de dev pour alléger l'image
+RUN npm prune --omit=dev
+
 ENV NODE_ENV=production
 ENV PORT=8080
-
-# Expose Cloud Run port
 EXPOSE 8080
 
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

@@ -9,7 +9,7 @@ const storage = new Storage();
  */
 async function readLaborCodeFromBucket(): Promise<string> {
   try {
-    const bucketName = "synerh-labor-laws";
+    const bucketName = "synerhgie-labor-laws" ;
     const fileName = "CODE DU TRAVAIL GUINEE.pdf";
     const file = storage.bucket(bucketName).file(fileName);
 
@@ -45,20 +45,24 @@ export async function askGemini({
       model: modelName,
       systemInstruction:
         systemPrompt ||
-        "Tu es un assistant juridique spécialisé dans le Code du Travail de Guinée. Réponds uniquement sur la base du texte officiel du Code du Travail guinéen.",
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 8192,
-      },
-    });
+        `Tu es un assistant juridique expert du droit du travail guinéen.
+        Tu dois répondre en t’appuyant avant tout sur le contenu du Code du Travail de Guinée (fourni dans le contexte ci-dessous).
+        Si la question n’a pas de lien direct avec le travail, la loi, ou les droits du salarié, tu peux répondre brièvement
+        en disant que ta spécialité concerne le droit du travail guinéen.
+        Si la question est vague mais que tu peux la relier à une notion juridique (ex: congé, contrat, sécurité, employeur, etc.),
+        tente de formuler une réponse utile basée sur le texte fourni.`
+    }); // <-- fermeture correcte ici
 
     // Lecture du Code du Travail depuis ton bucket
     const codeText = await readLaborCodeFromBucket();
 
+    // ✅ Ajoute ce log ici
+    console.log("✅ Texte extrait du PDF chargé, longueur:", codeText.length);
+
     // Construction du prompt final
     const userPrompt = `
 Contexte (extrait du Code du Travail de Guinée):
-${codeText.slice(0, 15000)}  // pour éviter la limite de tokens
+${codeText.slice(0, 15000)}
 
 Profil: ${profile || "non spécifié"}
 
